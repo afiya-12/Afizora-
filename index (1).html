@@ -1,0 +1,1006 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Afizora - Style that speaks louder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Bodoni Moda', serif;
+            background-color: #f8f1e7;
+            color: #002147;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Bodoni Moda', serif;
+            font-style: italic;
+        }
+        .grid { display: grid; gap: 1.5rem; }
+        .grid-item { break-inside: avoid; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-button {
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+            border-radius: 0.375rem;
+            background-color: #f8f1e7;
+            color: #002147;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Bodoni Moda', serif;
+            font-style: italic;
+        }
+        .tab-button:hover { background-color: #e5e7eb; }
+        .tab-button.active { background-color: #002147; color: #f8f1e7; }
+        .nav-link {
+            font-family: 'Bodoni Moda', serif;
+            color: #002147;
+            transition: color 0.3s;
+        }
+        .nav-link:hover { color: #e5e7eb; }
+        .cta-button {
+            background-color: #002147;
+            color: #f8f1e7;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-family: 'Bodoni Moda', serif;
+            transition: background-color 0.3s;
+        }
+        .cta-button:hover { background-color: #003087; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="p-6 flex justify-between items-center bg-[#f8f1e7] shadow">
+        <div>
+            <h1 class="text-3xl font-bold">Afizora</h1>
+            <p class="text-sm italic">Style that speaks louder</p>
+        </div>
+        <nav class="hidden md:flex space-x-4">
+            <a href="#home" class="nav-link tab-button active" onclick="openTab('home')">Home</a>
+            <a href="#collection" class="nav-link tab-button" onclick="openTab('collection')">Collection</a>
+            <a href="#about" class="nav-link tab-button" onclick="openTab('about')">About</a>
+            <a href="#blog" class="nav-link tab-button" onclick="openTab('blog')">Blog</a>
+            <a href="#lookbook" class="nav-link tab-button" onclick="openTab('lookbook')">Lookbook</a>
+            <a href="#contact" class="nav-link tab-button" onclick="openTab('contact')">Contact</a>
+        </nav>
+        <div class="md:hidden">
+            <button onclick="toggleMobileMenu()" class="text-[#002147]">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+    <div id="mobile-menu" class="hidden md:hidden bg-[#f8f1e7] p-4">
+        <a href="#home" class="block nav-link py-2" onclick="openTab('home'); toggleMobileMenu()">Home</a>
+        <a href="#collection" class="block nav-link py-2" onclick="openTab('collection'); toggleMobileMenu()">Collection</a>
+        <a href="#about" class="block nav-link py-2" onclick="openTab('about'); toggleMobileMenu()">About</a>
+        <a href="#blog" class="block nav-link py-2" onclick="openTab('blog'); toggleMobileMenu()">Blog</a>
+        <a href="#lookbook" class="block nav-link py-2" onclick="openTab('lookbook'); toggleMobileMenu()">Lookbook</a>
+        <a href="#contact" class="block nav-link py-2" onclick="openTab('contact'); toggleMobileMenu()">Contact</a>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-6">
+        <!-- Admin Dashboard (Visible only in admin mode) -->
+        <div id="admin-dashboard" class="mb-6 hidden">
+            <h2 class="text-3xl font-semibold mb-4">Admin Dashboard</h2>
+            <div class="bg-white p-4 rounded-lg shadow-lg">
+                <div class="flex flex-wrap gap-4 mb-4">
+                    <button class="tab-button active" onclick="openAdminTab('products')">Product Manager</button>
+                    <button class="tab-button" onclick="openAdminTab('orders')">Order Manager</button>
+                    <button class="tab-button" onclick="openAdminTab('testimonials')">Testimonials</button>
+                    <button class="tab-button" onclick="openAdminTab('blog')">Blog Editor</button>
+                    <button class="tab-button" onclick="openAdminTab('analytics')">Analytics</button>
+                </div>
+
+                <!-- Product Manager -->
+                <div id="admin-products" class="admin-tab-content active">
+                    <h3 class="text-lg font-semibold mb-2">Add New Product</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-600">Category</label>
+                            <select id="new-product-category" class="w-full p-2 border rounded">
+                                <option value="kurtis">Kurtis</option>
+                                <option value="jewelry">Jewelry</option>
+                                <option value="accessories">Accessories</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Name</label>
+                            <input id="new-product-name" type="text" class="w-full p-2 border rounded" placeholder="e.g., Straight Short Kurti">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Price</label>
+                            <input id="new-product-price" type="number" class="w-full p-2 border rounded" placeholder="e.g., 1500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Stock</label>
+                            <input id="new-product-stock" type="number" class="w-full p-2 border rounded" placeholder="e.g., 10" min="0">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Image URL</label>
+                            <input id="new-product-image" type="text" class="w-full p-2 border rounded" placeholder="e.g., https://example.com/image.jpg">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Back/Detail Image URL</label>
+                            <input id="new-product-back-image" type="text" class="w-full p-2 border rounded" placeholder="e.g., https://example.com/back-image.jpg">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Fabric</label>
+                            <input id="new-product-fabric" type="text" class="w-full p-2 border rounded" placeholder="e.g., Cotton">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Color</label>
+                            <input id="new-product-color" type="text" class="w-full p-2 border rounded" placeholder="e.g., Navy Blue">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Occasion</label>
+                            <input id="new-product-occasion" type="text" class="w-full p-2 border rounded" placeholder="e.g., Festive">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Sizes (comma-separated)</label>
+                            <input id="new-product-sizes" type="text" class="w-full p-2 border rounded" placeholder="e.g., S,M,L,XL">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Badge</label>
+                            <select id="new-product-badge" class="w-full p-2 border rounded">
+                                <option value="">None</option>
+                                <option value="Made to Order">Made to Order</option>
+                                <option value="Limited Edition">Limited Edition</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Feature on Homepage</label>
+                            <input id="new-product-featured" type="checkbox" class="p-2">
+                        </div>
+                    </div>
+                    <button onclick="addProduct()" class="cta-button mb-4">Add Product</button>
+                    <h3 class="text-lg font-semibold mb-2">Manage Products</h3>
+                    <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+
+                <!-- Order Manager -->
+                <div id="admin-orders" class="admin-tab-content">
+                    <h3 class="text-lg font-semibold mb-2">Order Manager</h3>
+                    <div id="order-list" class="space-y-4"></div>
+                    <button onclick="exportOrders()" class="cta-button mt-4">Export Orders to JSON</button>
+                </div>
+
+                <!-- Testimonials -->
+                <div id="admin-testimonials" class="admin-tab-content">
+                    <h3 class="text-lg font-semibold mb-2">Add New Testimonial</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-600">Name (First Only)</label>
+                            <input id="new-testimonial-name" type="text" class="w-full p-2 border rounded" placeholder="e.g., Ayesha">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">City</label>
+                            <input id="new-testimonial-city" type="text" class="w-full p-2 border rounded" placeholder="e.g., Mumbai">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Quote</label>
+                            <textarea id="new-testimonial-quote" class="w-full p-2 border rounded" placeholder="e.g., I never felt this confident..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Image URL</label>
+                            <input id="new-testimonial-image" type="text" class="w-full p-2 border rounded" placeholder="e.g., https://example.com/image.jpg">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Video URL (Optional)</label>
+                            <input id="new-testimonial-video" type="text" class="w-full p-2 border rounded" placeholder="e.g., Instagram embed code">
+                        </div>
+                    </div>
+                    <button onclick="addTestimonial()" class="cta-button mb-4">Add Testimonial</button>
+                    <h3 class="text-lg font-semibold mb-2">Manage Testimonials</h3>
+                    <div id="testimonial-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+
+                <!-- Blog Editor -->
+                <div id="admin-blog" class="admin-tab-content">
+                    <h3 class="text-lg font-semibold mb-2">Add New Blog Post</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-600">Title</label>
+                            <input id="new-blog-title" type="text" class="w-full p-2 border rounded" placeholder="e.g., 5 Ways to Style Your Kurti">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600">Cover Image URL</label>
+                            <input id="new-blog-image" type="text" class="w-full p-2 border rounded" placeholder="e.g., https://example.com/image.jpg">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-gray-600">Content</label>
+                            <textarea id="new-blog-content" class="w-full p-2 border rounded" rows="5" placeholder="Write your blog post here..."></textarea>
+                        </div>
+                    </div>
+                    <button onclick="addBlogPost()" class="cta-button mb-4">Add Blog Post</button>
+                    <h3 class="text-lg font-semibold mb-2">Manage Blog Posts</h3>
+                    <div id="blog-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+
+                <!-- Analytics -->
+                <div id="admin-analytics" class="admin-tab-content">
+                    <h3 class="text-lg font-semibold mb-2">Analytics</h3>
+                    <p><strong>Total Page Views:</strong> <span id="page-views">0</span></p>
+                    <p><strong>Total Clicks on Products:</strong> <span id="product-clicks">0</span></p>
+                    <h4 class="mt-4 font-semibold">Top Products</h4>
+                    <ul id="top-products" class="list-disc pl-5"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Home Tab -->
+        <div id="home" class="tab-content active">
+            <!-- Hero Section -->
+            <section class="relative mb-12">
+                <div class="w-full h-96 bg-gray-200 flex items-center justify-center text-gray-500">
+                    [Hero Video Placeholder: Faceless reel or model twirling in Afizora outfit]
+                </div>
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <h2 class="text-4xl font-bold mb-4">Welcome to Afizora</h2>
+                    <p class="text-xl italic mb-4">Style that speaks louder</p>
+                    <a href="#collection" class="cta-button" onclick="openTab('collection')">Explore the Collection</a>
+                </div>
+            </section>
+
+            <!-- Featured Products -->
+            <section class="mb-12">
+                <h2 class="text-3xl font-semibold mb-6">Featured Collection</h2>
+                <div id="featured-products" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </section>
+
+            <!-- Testimonials -->
+            <section class="mb-12">
+                <h2 class="text-3xl font-semibold mb-6">Love Letters</h2>
+                <div id="testimonials" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </section>
+        </div>
+
+        <!-- Collection Tab -->
+        <div id="collection" class="tab-content">
+            <h2 class="text-3xl font-semibold mb-6">Collection</h2>
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Filters -->
+                <div class="lg:w-1/4 bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-4">Filters</h3>
+                    <div class="mb-4">
+                        <label class="block text-gray-600 mb-2">Category</label>
+                        <select id="filter-category" class="w-full p-2 border rounded" onchange="filterProducts()">
+                            <option value="all">All</option>
+                            <option value="kurtis">Kurtis</option>
+                            <option value="jewelry">Jewelry</option>
+                            <option value="accessories">Accessories</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-600 mb-2">Fabric</label>
+                        <select id="filter-fabric" class="w-full p-2 border rounded" onchange="filterProducts()">
+                            <option value="">All</option>
+                            <option value="Cotton">Cotton</option>
+                            <option value="Silk">Silk</option>
+                            <option value="Chiffon">Chiffon</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-600 mb-2">Color</label>
+                        <select id="filter-color" class="w-full p-2 border rounded" onchange="filterProducts()">
+                            <option value="">All</option>
+                            <option value="Navy Blue">Navy Blue</option>
+                            <option value="White">White</option>
+                            <option value="Gold">Gold</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-600 mb-2">Occasion</label>
+                        <select id="filter-occasion" class="w-full p-2 border rounded" onchange="filterProducts()">
+                            <option value="">All</option>
+                            <option value="Festive">Festive</option>
+                            <option value="Daily Wear">Daily Wear</option>
+                            <option value="Occasionwear">Occasionwear</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-600 mb-2">Size</label>
+                        <select id="filter-size" class="w-full p-2 border rounded" onchange="filterProducts()">
+                            <option value="">All</option>
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Products -->
+                <div class="lg:w-3/4">
+                    <div id="products" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Detail Modal -->
+        <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+            <div class="bg-white p-6 rounded-lg max-w-lg w-full">
+                <h3 id="product-modal-name" class="text-2xl font-semibold mb-2"></h3>
+                <p id="product-modal-price" class="text-lg mb-4"></p>
+                <div id="product-modal-images" class="mb-4">
+                    <img id="product-modal-image" class="w-full h-48 object-cover rounded mb-2">
+                    <img id="product-modal-back-image" class="w-full h-48 object-cover rounded">
+                </div>
+                <p id="product-modal-badge" class="text-sm font-semibold text-gray-600 mb-2"></p>
+                <p id="product-modal-fabric" class="text-sm mb-2"></p>
+                <p id="product-modal-color" class="text-sm mb-2"></p>
+                <p id="product-modal-occasion" class="text-sm mb-2"></p>
+                <div class="mb-4">
+                    <label class="block text-gray-600 mb-2">Size</label>
+                    <select id="product-modal-size" class="w-full p-2 border rounded"></select>
+                </div>
+                <button onclick="addToCart()" class="cta-button mb-2 w-full">Add to Cart</button>
+                <button onclick="closeModal()" class="text-gray-600 hover:underline w-full text-center">Close</button>
+            </div>
+        </div>
+
+        <!-- About Tab -->
+        <div id="about" class="tab-content">
+            <h2 class="text-3xl font-semibold mb-6">About Afizora</h2>
+            <div class="mb-6">
+                <p class="text-lg mb-4">Afizora was born from a love for heritage and a passion for modern elegance. We blend traditional craftsmanship with contemporary design to create pieces that empower you to express your unique style with confidence.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-gray-200 h-48 flex items-center justify-center text-gray-500">[Photo: Fabric]</div>
+                    <div class="bg-gray-200 h-48 flex items-center justify-center text-gray-500">[Photo: Hands Sketching]</div>
+                    <div class="bg-gray-200 h-48 flex items-center justify-center text-gray-500">[Photo: Tailoring Tools]</div>
+                </div>
+            </div>
+            <div class="mb-6">
+                <h3 class="text-2xl font-semibold mb-2">Our Mission</h3>
+                <p class="text-lg">Confidence through clothing – we design for the woman who values modesty, creativity, and timeless beauty.</p>
+            </div>
+            <div>
+                <h3 class="text-2xl font-semibold mb-2">The Founders</h3>
+                <p class="text-lg">Our co-founders are two visionaries who share a love for fashion that tells a story. Through faceless silhouettes, they bring Afizora to life with every stitch and design.</p>
+            </div>
+        </div>
+
+        <!-- Blog Tab -->
+        <div id="blog" class="tab-content">
+            <h2 class="text-3xl font-semibold mb-6">From Threads to Trends</h2>
+            <div id="blog-posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+        <!-- Blog Post Modal -->
+        <div id="blog-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+            <div class="bg-white p-6 rounded-lg max-w-2xl w-full overflow-y-auto max-h-[80vh]">
+                <h3 id="blog-modal-title" class="text-2xl font-semibold mb-2"></h3>
+                <img id="blog-modal-image" class="w-full h-48 object-cover rounded mb-4">
+                <div id="blog-modal-content" class="text-lg"></div>
+                <button onclick="closeBlogModal()" class="text-gray-600 hover:underline w-full text-center mt-4">Close</button>
+            </div>
+        </div>
+
+        <!-- Lookbook Tab -->
+        <div id="lookbook" class="tab-content">
+            <h2 class="text-3xl font-semibold mb-6">Lookbook</h2>
+            <div class="grid" data-masonry='{ "itemSelector": ".grid-item", "columnWidth": 300, "gutter": 20 }'>
+                <div class="grid-item bg-gray-200 h-48 flex items-center justify-center text-gray-500">[Aesthetic Image 1]</div>
+                <div class="grid-item bg-gray-200 h-64 flex items-center justify-center text-gray-500">[Aesthetic Image 2]</div>
+                <div class="grid-item bg-gray-200 h-48 flex items-center justify-center text-gray-500">[Aesthetic Image 3]</div>
+                <div class="grid-item bg-gray-200 h-64 flex items-center justify-center text-gray-500">[Collection Preview 1]</div>
+            </div>
+            <div class="mt-6">
+                <h3 class="text-2xl font-semibold mb-4">Follow Us on Instagram</h3>
+                <div class="bg-gray-200 h-48 flex items-center justify-center text-gray-500">[Instagram Feed Embed Placeholder]</div>
+            </div>
+        </div>
+
+        <!-- Contact Tab -->
+        <div id="contact" class="tab-content">
+            <h2 class="text-3xl font-semibold mb-6">Contact Us</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg mx-auto">
+                <form onsubmit="submitContact(event)">
+                    <div class="mb-4">
+                        <label class="block text-gray-600 mb-2">Name</label>
+                        <input type="text" id="contact-name" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-600 mb-2">Email/Phone</label>
+                        <input type="text" id="contact-info" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-600 mb-2">Message</label>
+                        <textarea id="contact-message" class="w-full p-2 border rounded" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="cta-button w-full">Submit</button>
+                </form>
+                <div class="mt-6 text-center">
+                    <p class="mb-2"><strong>Instagram:</strong> @afizora</p>
+                    <p class="mb-2"><strong>Email:</strong> hello@afizora.com</p>
+                    <p class="mb-2"><strong>WhatsApp:</strong> +91-123-456-7890</p>
+                    <p class="mt-4"><strong>How to Order:</strong> Fill out the form above, or DM us on Instagram/WhatsApp to place your order. We'll confirm your details and provide payment instructions.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-[#002147] text-[#f8f1e7] p-4 text-center">
+        <p>© 2025 Afizora. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Initial Data
+        const initialData = {
+            products: {
+                kurtis: [
+                    { id: "straight-short-kurti", name: "Straight Short Kurti", price: 1500, stock: 20, image: "", backImage: "", fabric: "Cotton", color: "Navy Blue", occasion: "Daily Wear", sizes: ["S", "M", "L", "XL"], badge: "Best Seller", featured: true },
+                    { id: "flared-short-kurti", name: "Flared Short Kurti", price: 1800, stock: 15, image: "", backImage: "", fabric: "Silk", color: "Gold", occasion: "Festive", sizes: ["S", "M", "L"], badge: "Made to Order", featured: false }
+                ],
+                jewelry: [
+                    { id: "pearl-studs", name: "Pearl Studs with Gold Trim", price: 800, stock: 25, image: "", backImage: "", fabric: "", color: "White", occasion: "Occasionwear", sizes: [], badge: "", featured: true }
+                ],
+                accessories: [
+                    { id: "beaded-hairband", name: "Beaded Hairband", price: 300, stock: 15, image: "", backImage: "", fabric: "", color: "Gold", occasion: "Daily Wear", sizes: [], badge: "", featured: false }
+                ]
+            },
+            testimonials: [
+                { id: "t1", name: "Ayesha", city: "Mumbai", quote: "I never felt this confident in ethnic wear until I wore Afizora. It's like being seen without showing too much.", image: "", video: "" },
+                { id: "t2", name: "Priya", city: "Delhi", quote: "This kurti felt like it was stitched just for me. The quality, the cut, everything!", image: "", video: "" }
+            ],
+            blogPosts: [
+                { id: "b1", title: "5 Ways to Style Your Kurti", image: "", content: "Kurtis are versatile pieces that can be styled in many ways. Here are 5 tips to elevate your look..." },
+                { id: "b2", title: "The Art of Minimal Ethnic", image: "", content: "Minimalism in ethnic wear is all about subtle elegance. Learn how to achieve this look..." }
+            ],
+            orders: [],
+            analytics: { pageViews: 0, productClicks: {}, inquiries: [] }
+        };
+
+        let data = JSON.parse(localStorage.getItem('afizoraData')) || initialData;
+
+        // Check if admin mode is enabled
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAdmin = urlParams.get('admin') === 'true';
+
+        // Show admin dashboard if in admin mode
+        if (isAdmin) {
+            document.getElementById('admin-dashboard').classList.remove('hidden');
+        }
+
+        // Analytics: Track page views
+        data.analytics.pageViews += 1;
+        localStorage.setItem('afizoraData', JSON.stringify(data));
+        document.getElementById('page-views').textContent = data.analytics.pageViews;
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        // Open Tab
+        function openTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`a[href="#${tabName}"]`).classList.add('active');
+            if (tabName === 'lookbook') {
+                const container = document.querySelector('#lookbook .grid');
+                new Masonry(container, { itemSelector: '.grid-item', columnWidth: 300, gutter: 20 });
+            }
+        }
+
+        // Open Admin Tab
+        function openAdminTab(tabName) {
+            document.querySelectorAll('.admin-tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`admin-${tabName}`).classList.add('active');
+            document.querySelector(`button[onclick="openAdminTab('${tabName}')"]`).classList.add('active');
+        }
+
+        // Render Products
+        function renderProducts() {
+            const productList = document.getElementById('product-list');
+            const products = document.getElementById('products');
+            const featuredProducts = document.getElementById('featured-products');
+            productList.innerHTML = '';
+            products.innerHTML = '';
+            featuredProducts.innerHTML = '';
+
+            Object.keys(data.products).forEach(category => {
+                data.products[category].forEach(product => {
+                    // Product List (Admin)
+                    if (isAdmin) {
+                        const adminDiv = document.createElement('div');
+                        adminDiv.className = 'bg-gray-100 p-4 rounded';
+                        adminDiv.innerHTML = `
+                            <h4 class="font-semibold">${product.name}</h4>
+                            <p>Price: ₹${product.price}</p>
+                            <p>Stock: ${product.stock}</p>
+                            <button onclick="editProduct('${category}', '${product.id}')" class="text-blue-600 hover:underline mr-2">Edit</button>
+                            <button onclick="deleteProduct('${category}', '${product.id}')" class="text-red-600 hover:underline">Delete</button>
+                        `;
+                        productList.appendChild(adminDiv);
+                    }
+
+                    // Public Products
+                    const productDiv = document.createElement('div');
+                    productDiv.className = 'relative group';
+                    productDiv.innerHTML = `
+                        <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                            ${product.image ? `<img src="${product.image}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\\'w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500\\'>[Image Not Found]</div>'">` : '[No Image]'}
+                        </div>
+                        <div class="group-hover:hidden absolute inset-0 w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                            ${product.backImage ? `<img src="${product.backImage}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\\'w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500\\'>[Image Not Found]</div>'">` : '[No Back Image]'}
+                        </div>
+                        <h3 class="text-lg font-semibold mt-2">${product.name}</h3>
+                        <p>₹${product.price}</p>
+                        ${product.badge ? `<p class="text-sm font-semibold text-gray-600">${product.badge}</p>` : ''}
+                    `;
+                    productDiv.onclick = () => openProductModal(product);
+                    products.appendChild(productDiv);
+
+                    // Featured Products
+                    if (product.featured) {
+                        const featuredDiv = document.createElement('div');
+                        featuredDiv.className = 'relative group';
+                        featuredDiv.innerHTML = productDiv.innerHTML;
+                        featuredDiv.onclick = () => openProductModal(product);
+                        featuredProducts.appendChild(featuredDiv);
+                    }
+                });
+            });
+        }
+
+        // Filter Products
+        function filterProducts() {
+            const category = document.getElementById('filter-category').value;
+            const fabric = document.getElementById('filter-fabric').value;
+            const color = document.getElementById('filter-color').value;
+            const occasion = document.getElementById('filter-occasion').value;
+            const size = document.getElementById('filter-size').value;
+
+            const products = document.getElementById('products');
+            products.innerHTML = '';
+
+            Object.keys(data.products).forEach(cat => {
+                if (category !== 'all' && cat !== category) return;
+                data.products[cat].forEach(product => {
+                    if (fabric && product.fabric !== fabric) return;
+                    if (color && product.color !== color) return;
+                    if (occasion && product.occasion !== occasion) return;
+                    if (size && !product.sizes.includes(size)) return;
+
+                    const productDiv = document.createElement('div');
+                    productDiv.className = 'relative group';
+                    productDiv.innerHTML = `
+                        <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                            ${product.image ? `<img src="${product.image}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\\'w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500\\'>[Image Not Found]</div>'">` : '[No Image]'}
+                        </div>
+                        <div class="group-hover:hidden absolute inset-0 w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                            ${product.backImage ? `<img src="${product.backImage}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\\'w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500\\'>[Image Not Found]</div>'">` : '[No Back Image]'}
+                        </div>
+                        <h3 class="text-lg font-semibold mt-2">${product.name}</h3>
+                        <p>₹${product.price}</p>
+                        ${product.badge ? `<p class="text-sm font-semibold text-gray-600">${product.badge}</p>` : ''}
+                    `;
+                    productDiv.onclick = () => openProductModal(product);
+                    products.appendChild(productDiv);
+                });
+            });
+        }
+
+        // Open Product Modal
+        function openProductModal(product) {
+            document.getElementById('product-modal-name').textContent = product.name;
+            document.getElementById('product-modal-price').textContent = `₹${product.price}`;
+            document.getElementById('product-modal-image').src = product.image || '';
+            document.getElementById('product-modal-image').onerror = () => document.getElementById('product-modal-image').outerHTML = '<div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">[Image Not Found]</div>';
+            document.getElementById('product-modal-back-image').src = product.backImage || '';
+            document.getElementById('product-modal-back-image').onerror = () => document.getElementById('product-modal-back-image').outerHTML = '<div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">[Image Not Found]</div>';
+            document.getElementById('product-modal-badge').textContent = product.badge || '';
+            document.getElementById('product-modal-fabric').textContent = `Fabric: ${product.fabric || 'N/A'}`;
+            document.getElementById('product-modal-color').textContent = `Color: ${product.color || 'N/A'}`;
+            document.getElementById('product-modal-occasion').textContent = `Occasion: ${product.occasion || 'N/A'}`;
+            const sizeSelect = document.getElementById('product-modal-size');
+            sizeSelect.innerHTML = product.sizes.map(size => `<option value="${size}">${size}</option>`).join('');
+            document.getElementById('product-modal').classList.remove('hidden');
+
+            // Track product click
+            data.analytics.productClicks[product.id] = (data.analytics.productClicks[product.id] || 0) + 1;
+            localStorage.setItem('afizoraData', JSON.stringify(data));
+            renderAnalytics();
+        }
+
+        // Close Product Modal
+        function closeModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+        }
+
+        // Add to Cart
+        function addToCart() {
+            const productName = document.getElementById('product-modal-name').textContent;
+            const size = document.getElementById('product-modal-size').value;
+            const order = {
+                id: Date.now().toString(),
+                product: productName,
+                size: size,
+                status: 'Pending',
+                customer: 'N/A'
+            };
+            data.orders.push(order);
+            localStorage.setItem('afizoraData', JSON.stringify(data));
+            alert('Added to cart! We will contact you for confirmation.');
+            closeModal();
+            renderOrders();
+        }
+
+        // Add Product
+        function addProduct() {
+            const category = document.getElementById('new-product-category').value;
+            const name = document.getElementById('new-product-name').value;
+            const price = parseInt(document.getElementById('new-product-price').value);
+            const stock = parseInt(document.getElementById('new-product-stock').value);
+            const image = document.getElementById('new-product-image').value;
+            const backImage = document.getElementById('new-product-back-image').value;
+            const fabric = document.getElementById('new-product-fabric').value;
+            const color = document.getElementById('new-product-color').value;
+            const occasion = document.getElementById('new-product-occasion').value;
+            const sizes = document.getElementById('new-product-sizes').value.split(',').map(s => s.trim());
+            const badge = document.getElementById('new-product-badge').value;
+            const featured = document.getElementById('new-product-featured').checked;
+
+            if (!name || !price || !stock) {
+                alert('Please fill in all required fields (Name, Price, Stock).');
+                return;
+            }
+
+            const id = name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+            const newProduct = { id, name, price, stock, image, backImage, fabric, color, occasion, sizes, badge, featured };
+            data.products[category].push(newProduct);
+            localStorage.setItem('afizoraData', JSON.stringify(data));
+            renderProducts();
+
+            // Clear form
+            document.getElementById('new-product-name').value = '';
+            document.getElementById('new-product-price').value = '';
+            document.getElementById('new-product-stock').value = '';
+            document.getElementById('new-product-image').value = '';
+            document.getElementById('new-product-back-image').value = '';
+            document.getElementById('new-product-fabric').value = '';
+            document.getElementById('new-product-color').value = '';
+            document.getElementById('new-product-occasion').value = '';
+            document.getElementById('new-product-sizes').value = '';
+            document.getElementById('new-product-badge').value = '';
+            document.getElementById('new-product-featured').checked = false;
+        }
+
+        // Edit Product
+        function editProduct(category, id) {
+            const product = data.products[category].find(p => p.id === id);
+            const name = prompt('Enter new name:', product.name);
+            const price = prompt('Enter new price:', product.price);
+            const stock = prompt('Enter new stock:', product.stock);
+            const image = prompt('Enter new image URL:', product.image);
+            const backImage = prompt('Enter new back image URL:', product.backImage);
+            const fabric = prompt('Enter new fabric:', product.fabric);
+            const color = prompt('Enter new color:', product.color);
+            const occasion = prompt('Enter new occasion:', product.occasion);
+            const sizes = prompt('Enter new sizes (comma-separated):', product.sizes.join(','));
+            const badge = prompt('Enter new badge (Made to Order, Limited Edition, or leave blank):', product.badge);
+            const featured = confirm('Feature on homepage?');
+
+            if (name) product.name = name;
+            if (price && !isNaN(price)) product.price = parseInt(price);
+            if (stock && !isNaN(stock)) product.stock = parseInt(stock);
+            if (image !== null) product.image = image;
+            if (backImage !== null) product.backImage = backImage;
+            if (fabric) product.fabric = fabric;
+            if (color) product.color = color;
+            if (occasion) product.occasion = occasion;
+            if (sizes) product.sizes = sizes.split(',').map(s => s.trim());
+            product.badge = badge || '';
+            product.featured = featured;
+
+            localStorage.setItem('afizoraData', JSON.stringify(data));
+            renderProducts();
+        }
+
+        // Delete Product
+        function deleteProduct(category, id) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                data.products[category] = data.products[category].filter(p => p.id !== id);
+                localStorage.setItem('afizoraData', JSON.stringify(data));
+                renderProducts();
+            }
+        }
+
+        // Render Orders
+        function renderOrders() {
+            const orderList = document.getElementById('order-list');
+            orderList.innerHTML = '';
+            data.orders.forEach(order => {
+                const orderDiv = document.createElement('div');
+                orderDiv.className = 'bg-gray-100 p-4 rounded';
+                orderDiv.innerHTML = `
+                    <p><strong>Order ID:</strong> ${order.id}</p>
+                    <p><strong>Product:</strong> ${order.product}</p>
+                    <p><strong>Size:</strong> ${order.size}</p>
+                    <p><strong>Status:</strong> ${order.status}</p>
+                    <p><strong>Customer:</strong> ${order.customer}</p>
+                    <select onchange="updateOrderStatus('${order.id}', this.value)" class="p-2 border rounded">
+                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option value="Stitching" ${order.status === 'Stitching' ? 'selected' : ''}>Stitching</option>
+                        <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                        <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                    </select>
+                    <button onclick="updateCustomer('${order.id}')" class="text-blue-600 hover:underline ml-2">Update Customer</button>
+                `;
+                orderList.appendChild(orderDiv);
+            });
+        }
+
+        // Update Order Status
+        function updateOrderStatus(orderId, status) {
+            const order = data.orders.find(o => o.id === orderId);
+            order.status = status;
+            localStorage.setItem('afizoraData', JSON.stringify(data));
+            renderOrders();
+        }
+
+        // Update Customer
+        function updateCustomer(orderId) {
+            const order = data.orders.find(o => o.id === orderId);
+            const customer = prompt('Enter customer details:', order.customer);
+            if (customer) {
+                order.customer = customer;
+                localStorage.setItem('afizoraData', JSON.stringify(data));
+                renderOrders();
+            }
+        }
+
+        // Export Orders
+        function exportOrders() {
+            const dataStr = JSON.stringify(data.orders, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'orders.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Render Testimonials
+        function renderTestimonials() {
+            const testimonialList = document.getElementById('testimonial-list');
+            const testimonials = document.getElementById('testimonials');
+            testimonialList.innerHTML = '';
+            testimonials.innerHTML = '';
+
+            data.testimonials.forEach(testimonial => {
+                // Admin List
+                if (isAdmin) {
+                    const adminDiv = document.createElement('div');
+                    adminDiv.className = 'bg-gray-100 p-4 rounded';
+                    adminDiv.innerHTML = `
+                        <p><strong>${testimonial.name}, ${testimonial.city}</strong></p>
+                        <p>${testimonial.quote}</p>
+                        <button onclick="deleteTestimonial('${testimonial.id}')" class="text-red-600 hover:underline">Delete</button>
+                    `;
+                    testimonialList.appendChild(adminDiv);
+                }
+
+                // Public Testimonials
+                const testimonialDiv = document.createElement('div');
+                testimonialDiv.className = 'bg-white p-4 rounded-lg shadow';
+                testimonialDiv.innerHTML = `
+                    <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500 mb-4">
+                        ${testimonial.image ? `<img src="${testimonial.image}" class="w-full h-full object-cover rounded" onerror="this.outerHTML='<div class=\\'w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500\\'>[Image Not Found]</div>'">` : '[No Image]'}
+                    </div>
+                    <p class="italic mb-2">"${testimonial.quote}"</p>
+                    <p class="text-sm">– ${testimonial.name}, ${testimonial.city}</p>
+                    ${testimonial.video ? `<div class="mt-2">${testimonial.video}</div>` : ''}
+                `;
+                testimonials.appendChild(testimonialDiv);
+            });
+        }
+
+        // Add Testimonial
+        function addTestimonial() {
+            const name = document.getElementById('new-testimonial-name').value;
+            const city = document.getElementById('new-testimonial-city').value;
+            const quote = document.getElementById('new-testimonial-quote').value;
+            const image = document.getElementById('new-testimonial-image').value;
+            const video = document.getElementById('new-testimonial-video').value;
+
+            if (!name || !city || !quote) {
+                alert('Please fill in all required fields (Name, City, Quote).');
+                return;
+            }
+
+            const id = 't' + Date.now();
+            const newTestimonial = { id, name, city, quote, image, video };
+            data.testimonials.push(newTestimonial);
+            localStorage.setItem('afizoraData', JSON.stringify(data));
+            renderTestimonials();
+
+            // Clear form
+            document.getElementById('new-testimonial-name').value = '';
+            document.getElementById('new-testimonial-city').value = '';
+            document.getElementById('new-testimonial-quote').value = '';
+            document.getElementById('new-testimonial-image').value = '';
+            document.getElementById('new-testimonial-video').value = '';
+        }
+
+        // Delete Testimonial
+        function deleteTestimonial(id) {
+            if (confirm('Are you sure you want to delete this testimonial?')) {
+                data.testimonials = data.testimonials.filter(t => t.id !== id);
+                localStorage.setItem('afizoraData', JSON.stringify(data));
+                renderTestimonials();
+            }
+        }
+
+        // Render Blog Posts
+        function renderBlogPosts() {
+            const blogList = document.getElementById('blog-list');
+            const blogPosts = document.getElementById('blog-posts');
+            blogList.innerHTML = '';
+            blogPosts.innerHTML = '';
+
+            data.blogPosts.forEach(post => {
+                // Admin List
+                if (isAdmin) {
+                    const adminDiv = document.createElement('div');
+                    adminDiv.className = 'bg-gray-100 p-4 rounded';
+                    adminDiv.innerHTML = `
+                        <h4 class="font-semibold">${post.title}</h4>
+                        <button onclick="deleteBlogPost('${post.id}')" class="text-red-600 hover:underline">Delete</button>
+                    `;
+                    blogList.appendChild(adminDiv);
+                }
+
+                // Public Blog Posts
+                const postDiv = document.createElement('div');
+                postDiv.className = 'bg-white p-4 rounded-lg shadow';
+                postDiv.innerHTML = `
+                    <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500 mb-4">
+                        ${post.image ? `<img src="${post.image}" class="w-full h-full object-cover rounded" onerror="this.outerHTML='<div class=\\'w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500\\'>[Image Not Found]</div>'">` : '[No Image]'}
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">${post.title}</h3>
+                    <p class="mb-2">${post.content.substring(0, 100)}...</p>
+                    <button onclick="openBlogModal('${post.id}')" class="text-[#002147] hover:underline">Read More</button>
+                `;
+                blogPosts.appendChild(postDiv);
+            });
+        }
+
+        // Add Blog Post
+        function addBlogPost() {
+            const title = document.getElementById('new-blog-title').value;
+            const image = document.getElementById('new-blog-image').value;
+            const content = document.getElementById('new-blog-content').value;
+
+            if (!title || !content) {
+                alert('Please fill in all required fields (Title, Content).');
+                return;
+            }
+
+            const id = 'b' + Date.now();
+            const newPost = { id, title, image, content };
+            data.blogPosts.push(newPost);
+            localStorage.setItem('afizoraData', JSON.stringify(data));
+            renderBlogPosts();
+
+            // Clear form
+            document.getElementById('new-blog-title').value = '';
+            document.getElementById('new-blog-image').value = '';
+            document.getElementById('new-blog-content').value = '';
+        }
+
+        // Delete Blog Post
+        function deleteBlogPost(id) {
+            if (confirm('Are you sure you want to delete this blog post?')) {
+                data.blogPosts = data.blogPosts.filter(p => p.id !== id);
+                localStorage.setItem('afizoraData', JSON.stringify(data));
+                renderBlogPosts();
+            }
+        }
+
+        // Open Blog Modal
+        function openBlogModal(id) {
+            const post = data.blogPosts.find(p => p.id === id);
+            document.getElementById('blog-modal-title').textContent = post.title;
+            document.getElementById('blog-modal-image').src = post.image || '';
+            document.getElementById('blog-modal-image').onerror = () => document.getElementById('blog-modal-image').outerHTML = '<div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">[Image Not Found]</div>';
+            document.getElementById('blog-modal-content').textContent = post.content;
+            document.getElementById('blog-modal').classList.remove('hidden');
+        }
+
+        // Close Blog Modal
+        function closeBlogModal() {
+            document.getElementById('blog-modal').classList.add('hidden');
+        }
+
+        // Submit Contact Form
+        function submitContact(event) {
+            event.preventDefault();
+            const name = document.getElementById('contact-name').value;
+            const info = document.getElementById('contact-info').value;
+            const message = document.getElementById('contact-message').value;
+
+            data.analytics.inquiries.push({ name, info, message });
+            localStorage.setItem('afizoraData', JSON.stringify(data));
+            alert('Thank you for reaching out! We will get back to you soon.');
+            document.getElementById('contact-name').value = '';
+            document.getElementById('contact-info').value = '';
+            document.getElementById('contact-message').value = '';
+        }
+
+        // Render Analytics
+        function renderAnalytics() {
+            document.getElementById('page-views').textContent = data.analytics.pageViews;
+            document.getElementById('product-clicks').textContent = Object.values(data.analytics.productClicks).reduce((a, b) => a + b, 0);
+            const topProducts = Object.entries(data.analytics.productClicks)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3);
+            const topProductsList = document.getElementById('top-products');
+            topProductsList.innerHTML = '';
+            topProducts.forEach(([id, clicks]) => {
+                const product = Object.values(data.products).flat().find(p => p.id === id);
+                if (product) {
+                    const li = document.createElement('li');
+                    li.textContent = `${product.name}: ${clicks} clicks`;
+                    topProductsList.appendChild(li);
+                }
+            });
+        }
+
+        // Initial Render
+        renderProducts();
+        renderOrders();
+        renderTestimonials();
+        renderBlogPosts();
+        renderAnalytics();
+    </script>
+</body>
+</html>
